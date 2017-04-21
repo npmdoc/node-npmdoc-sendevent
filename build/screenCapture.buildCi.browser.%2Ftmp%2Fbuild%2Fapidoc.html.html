@@ -1,0 +1,140 @@
+<html><head></head><body><div class="apidocDiv">
+<style>
+/*csslint
+*/
+.apidocDiv {
+    background: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.apidocDiv a[href] {
+    color: #33f;
+    font-weight: bold;
+    text-decoration: none;
+}
+.apidocDiv a[href]:hover {
+    text-decoration: underline;
+}
+.apidocCodeCommentSpan {
+    background: #bbf;
+    color: #000;
+    display: block;
+}
+.apidocCodeKeywordSpan {
+    color: #d00;
+    font-weight: bold;
+}
+.apidocCodePre {
+    background: #eef;
+    border: 1px solid;
+    color: #777;
+    padding: 5px;
+    white-space: pre-wrap;
+}
+.apidocFooterDiv {
+    margin-top: 20px;
+    text-align: center;
+}
+.apidocModuleLi {
+    margin-top: 10px;
+}
+.apidocSectionDiv {
+    border-top: 1px solid;
+    margin-top: 20px;
+}
+.apidocSignatureSpan {
+    color: #777;
+    font-weight: bold;
+}
+</style>
+<h1>api documentation for
+    <a>sendevent (v1.0.4)</a>
+</h1>
+<h4>Middleware for server-sent-events with iframe fallback</h4>
+<div class="apidocSectionDiv"><a href="#apidoc.tableOfContents" id="apidoc.tableOfContents"><h1>table of contents</h1></a><ol>
+
+    <li class="apidocModuleLi"><a href="#apidoc.module.sendevent">module sendevent</a><ol>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.sendevent.sendevent">
+            function <span class="apidocSignatureSpan"></span>sendevent
+            <span class="apidocSignatureSpan">(mount)</span>
+            </a>
+
+        </li>
+
+    </ol></li>
+
+</ol></div>
+
+<div class="apidocSectionDiv">
+<h1><a href="#apidoc.module.sendevent" id="apidoc.module.sendevent">module sendevent</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.sendevent.sendevent" id="apidoc.element.sendevent.sendevent">
+        function <span class="apidocSignatureSpan"></span>sendevent
+        <span class="apidocSignatureSpan">(mount)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">sendevent = function (mount) {
+
+  if (!mount) mount = '/eventstream'
+
+  var emitter = new EventEmitter()
+  var clients = []
+  var id = 1
+
+  function Client(req, res) {
+    this.id = id++
+    this.headers = req.headers
+    this.res = res
+
+    this.send = req.headers.accept == 'text/event-stream'
+      ? sse(this)
+      : iframe(this, req.url.match(/close/))
+
+    clients.push(this)
+    res.on('close', this.close.bind(this))
+  }
+
+  Client.prototype.close = function() {
+    emitter.emit('disconnect', this)
+    this.res.end()
+    remove(this, clients)
+  }
+
+  function middleware(req, res, next) {
+    if (req.url.indexOf(mount) !== 0) return next &amp;&amp; next()
+    var client = new Client(req, res)
+    var re = req.url.match(/reconnect/)
+    emitter.emit(re? 'reconnect' : 'connect', client)
+  }
+
+  middleware.on = emitter.on.bind(emitter)
+
+<span class="apidocCodeCommentSpan">  /**
+   * Broadcast a message to all connected clients.
+   */
+</span>  middleware.broadcast = function(message) {
+    clients.forEach(function(client) {
+      client.send(message)
+    })
+  }
+
+  return middleware
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+</div>
+
+<div class="apidocFooterDiv">
+    [ this document was created with
+    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>
+    ]
+</div>
+</div>
+</body></html>
